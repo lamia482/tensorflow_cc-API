@@ -27,6 +27,6 @@ $(EXE): $(OBJS)
 
 $(OBJS_DIR)%.o: %.cc
 	$(CC_COMPILER) $(INCLUDE_PATH) $(LD_LIBRARY_PATH) $(CFLAGS) -c $< -o $@
-
+	
 clean:
 	rm -f $(OBJS) $(EXE)
