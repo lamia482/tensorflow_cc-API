@@ -4,13 +4,16 @@ EXE_SRC = main.cc
 C_COMPILER = gcc
 CC_COMPILER = g++
 
-INCLUDE_PATH = 	-I./include
+INCLUDE_PATH = 	-I./include \
+				`pkg-config --cflags opencv` 
 
 CFLAGS = -g -std=c++11
 
 LD_LIBRARY_PATH = -L./lib
 
-LD_FLAGS = -ltensorflow_cc -lcudnn -lglog
+LD_FLAGS = 	-ltensorflow_cc -lcudnn -lglog \
+			`pkg-config --libs opencv` \
+			-lm -lpthread
 
 OBJ = tf_api.o
 OBJS_DIR = ./

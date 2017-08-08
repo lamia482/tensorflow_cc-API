@@ -1,4 +1,3 @@
-ulimit -c unlimited
-rm -f core
+clear
 export LD_LIBRARY_PATH=./lib:$LD_LIBRARY_PATH
 ./gen

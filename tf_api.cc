@@ -7,10 +7,11 @@ TensorflowLoader::TensorflowLoader()
 	m_OutputTensorScore = "detection_scores:0";
 	m_OutputTensorClass = "detection_classes:0";
 	m_OutputTensorBox = "detection_boxes:0";
-	input_width = 448;
-	input_height = 448;
+	input_width = 640;
+	input_height = 424;
 	input_mean = 128;
 	input_std = 128;
+	m_ProbThresh = .6;
 }
 
 TensorflowLoader::~TensorflowLoader()
@@ -51,7 +52,13 @@ bool TensorflowLoader::loadModel(const std::string &model_file)
 
 bool TensorflowLoader::loadLabel(const std::string &label_file)
 {
-	
+	m_LabelFile = label_file;
+	std::ifstream labels(m_LabelFile.c_str());
+	std::string line;
+	while(std::getline(labels, line))
+		m_Category.push_back(line);
+	labels.close();
+	return true;
 }
 
 bool TensorflowLoader::feedSample(const Sample &sample)
@@ -71,7 +78,7 @@ bool TensorflowLoader::feedSample(const Sample &sample)
 	m_Sample = tensorflow::Tensor(tensorflow::DT_FLOAT, tensorflow::TensorShape({1, sampleSize}));
 	
 	for(int i=0;i<sampleSize;++i)
-		m_Sample.tensor<float, 2>()(0, i) = sample[i];
+		m_Sample.flat<float>()(i) = sample[i];
 	
 	m_Samples.push_back(std::pair<std::string, tensorflow::Tensor>(m_InputTensorName, m_Sample));
 	
@@ -131,39 +138,63 @@ bool TensorflowLoader::feedPath(const std::string &image_file)
 		LOG(ERROR) << "Error: Running image session failed, reason: " << status.ToString() << "\n";
 		return false;
 	}
+	session->Close();
 	return true;
 }
 
-int TensorflowLoader::doPredict(void)
+std::vector<TensorflowLoaderPrediction> TensorflowLoader::doPredict(void)
 {
+	std::vector<TensorflowLoaderPrediction> res;
+	
 	tensorflow::Status status = m_pSession->Run({{m_InputTensorName, m_OutTensor[0]}}, {m_OutputTensorClass, m_OutputTensorScore, m_OutputTensorBox}, {}, &m_Outputs);
 	if(!status.ok())
 	{
 		LOG(ERROR) << "Error: Running session failed, reason: " << status.ToString() << "\n";
-		return -1;
+		return res;
 	}
-	tensorflow::Tensor classTensor = m_Outputs[0];
-	tensorflow::Tensor scoreTensor = m_Outputs[1];
-	tensorflow::Tensor boxTensor = m_Outputs[2];
-	int classOutputSize = classTensor.dim_size(1);
-	int scoreOutputSize = scoreTensor.dim_size(1);
-	int boxOutputSize = boxTensor.dim_size(1);
+	auto classTensor = m_Outputs[0].flat<float>();
+	auto scoreTensor = m_Outputs[1].flat<float>();
+	auto boxTensor = m_Outputs[2].flat<float>();
 	
 	int resPrediction = 0;
 	float resPredictionProb = 0.0f;
-	for(int i=0;i<classOutputSize;++i)
+	int numPrediction = 0;
+	for(int i=0;i<m_Outputs.size();++i)
 	{
-		LOG(INFO) << "\n index: " << i << "\tclass ID: " << classTensor.tensor<float, 2>()(0, i) << "\tProb: " << scoreTensor.tensor<float, 2>()(0, i) << "\n";
-		if(resPredictionProb <= scoreTensor.tensor<float, 2>()(0, i))
+		if(scoreTensor(i) < m_ProbThresh)
+			continue;
+		numPrediction = i+1;
+		// [y1, x1, y2, x2];
+		LOG(INFO) << "\tindex: " << i << "\tclass ID: " << classTensor(i) \
+					<< "\tCategory: " << m_Category[classTensor(i)-1] \
+					<< " \tProb: " << scoreTensor(i) \
+					<< "\t[" << boxTensor(i*4+1)*input_width << ", " << boxTensor(i*4+0)*input_height \
+					<< ", " << boxTensor(i*4+3)*input_width - boxTensor(i*4+1)*input_width \
+					<< ", " << boxTensor(i*4+2)*input_height - boxTensor(i*4+0)*input_height << "]";
+		if(resPredictionProb <= scoreTensor(i))
 		{
-			resPredictionProb = scoreTensor.tensor<float, 2>()(0, i);
-			resPrediction = classTensor.tensor<float, 2>()(0, i);
+			resPredictionProb = scoreTensor(i);
+			resPrediction = classTensor(i);
 		}
 	}
 	
-	LOG(INFO) << "\nresult  -->  class ID: " << resPrediction << "\tProb: " << resPredictionProb << "\n";
+	LOG(INFO) << "\nresult  -->  class ID: " << resPrediction << "\tcategory: " << m_Category[resPrediction-1] << " \tProb: " << resPredictionProb << "\n";
 	
-	return resPrediction;
+	if(numPrediction > 0)
+	{
+		res.resize(numPrediction);
+		for(int i=0;i<numPrediction;++i)
+		{
+			res[i].category		= classTensor(i);
+			res[i].lefttopx		= boxTensor(i*4+1) * input_width;
+			res[i].lefttopy		= boxTensor(i*4+0) * input_height;
+			res[i].width		= boxTensor(i*4+3) * input_width - res[i].lefttopx;
+			res[i].height		= boxTensor(i*4+2) * input_height - res[i].lefttopy;
+			res[i].confidence	= scoreTensor(i);
+		}
+	}
+	
+	return res;
 }
 
 
