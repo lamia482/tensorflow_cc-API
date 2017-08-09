@@ -1,0 +1,1 @@
+/home/e0024/workspace/repository/tensorflow/models/object_detection/faster_rcnn_resnet101_coco_11_06_2017/frozen_inference_graph.pb

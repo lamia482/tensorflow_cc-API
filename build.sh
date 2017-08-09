@@ -1,5 +1,4 @@
 clear
-ulimit -c unlimited
 rm -f core
 make clean
 make all -j32

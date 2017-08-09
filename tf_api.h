@@ -12,6 +12,7 @@ public:
 	bool loadLabel(const std::string &label_file);
 	bool feedSample(const Sample &sample);
 	bool feedPath(const std::string &image_file);
+	bool feedRawData(unsigned char *data);
 	std::vector<TensorflowLoaderPrediction> doPredict(void);
 };
 

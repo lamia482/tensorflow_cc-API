@@ -4,6 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <unistd.h>
 #include <tensorflow/cc/ops/standard_ops.h>
 #include <tensorflow/core/public/session.h>
 #include <tensorflow/core/platform/env.h>
@@ -28,6 +29,7 @@ public:
 	virtual bool loadLabel(const std::string &) = 0;
 	virtual bool feedSample(const Sample &) = 0;
 	virtual bool feedPath(const std::string &i) = 0;
+	virtual bool feedRawData(unsigned char *) = 0;
 	virtual std::vector<TensorflowLoaderPrediction> doPredict(void) = 0;
 	
 protected:
@@ -43,11 +45,12 @@ protected:
 	std::string m_ModelFile;
 	tensorflow::Session *m_pSession;
 	tensorflow::GraphDef m_GraphDef;
-	int input_height, input_width;
+	int input_height, input_width, wanted_channels;
 	float input_mean, input_std;
 	float m_ProbThresh;
-	std::vector<tensorflow::Tensor> m_OutTensor;
+	std::vector<tensorflow::Tensor> m_ImageTensor;
 	std::vector<tensorflow::Tensor> m_Outputs;
+	clock_t m_Clock;
 };
 
 

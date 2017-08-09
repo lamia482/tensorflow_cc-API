@@ -9,6 +9,7 @@ TensorflowLoader::TensorflowLoader()
 	m_OutputTensorBox = "detection_boxes:0";
 	input_width = 640;
 	input_height = 424;
+	wanted_channels = 3;
 	input_mean = 128;
 	input_std = 128;
 	m_ProbThresh = .6;
@@ -21,7 +22,11 @@ TensorflowLoader::~TensorflowLoader()
 
 bool TensorflowLoader::loadModel(const std::string &model_file)
 {
-	tensorflow::Status status = tensorflow::NewSession(tensorflow::SessionOptions(), &m_pSession);
+	// tensorflow::GPUOptions gpuConfig;
+	// gpuConfig.set_per_process_gpu_memory_fraction(.5);
+	tensorflow::SessionOptions sessionConfig;
+	// sessionConfig.config.set_allocated_gpu_options(&gpuConfig);
+	tensorflow::Status status = tensorflow::NewSession(sessionConfig, &m_pSession);
 	if(!status.ok())
 	{
 		LOG(ERROR) << "Error: Create session failed, reason: " << status.ToString() << "\n";
@@ -87,13 +92,13 @@ bool TensorflowLoader::feedSample(const Sample &sample)
 
 bool TensorflowLoader::feedPath(const std::string &image_file)
 {
+	m_Clock = clock();
 	// tensorflow::ops::DecodeRaw()
 	auto root = tensorflow::Scope::NewRootScope();
 	tensorflow::string input_name = "file_reader";
 	tensorflow::string original_name = "identity";
 	tensorflow::string output_name = "normalized";
 	auto file_reader = tensorflow::ops::ReadFile(root.WithOpName(input_name), image_file);
-	const int wanted_channels = 3;
 	tensorflow::Output image_reader;
 	if (tensorflow::StringPiece(image_file).ends_with(".png")) 
 	{
@@ -111,11 +116,11 @@ bool TensorflowLoader::feedPath(const std::string &image_file)
 	
 	auto original_image = tensorflow::ops::Identity(root.WithOpName(original_name), image_reader);
 	// auto float_caster = tensorflow::ops::Cast(root.WithOpName("float_caster"), original_image, tensorflow::DT_FLOAT);
-	auto dims_expander = tensorflow::ops::ExpandDims(root, original_image, 0);
-	auto resized = tensorflow::ops::ResizeBilinear(root, dims_expander, 
+	auto dims_expander = tensorflow::ops::ExpandDims(root.WithOpName("dims_expander"), original_image, 0);
+	// auto resized = tensorflow::ops::ResizeBilinear(root, dims_expander, \
 					tensorflow::ops::Const(root.WithOpName("size"), {input_height, input_width}));
 	// auto div = tensorflow::ops::Div(root.WithOpName(output_name), tensorflow::ops::Sub(root, resized, {input_mean}), {input_std});
-	auto uint8_caster = tensorflow::ops::Cast(root.WithOpName("uint8_caster"), resized, tensorflow::DT_UINT8);
+	// auto uint8_caster = tensorflow::ops::Cast(root.WithOpName("uint8_caster"), resized, tensorflow::DT_UINT8);
 
 	tensorflow::Status status;
 	tensorflow::GraphDef graph;
@@ -132,7 +137,7 @@ bool TensorflowLoader::feedPath(const std::string &image_file)
 		LOG(ERROR) << "Error: Creating image graph failed, reason: " << status.ToString() << "\n";
 		return false;
 	}
-	status = session->Run({}, {"uint8_caster", original_name}, {}, &m_OutTensor);
+	status = session->Run({}, {"dims_expander"}, {}, &m_ImageTensor);
 	if(!status.ok())
 	{
 		LOG(ERROR) << "Error: Running image session failed, reason: " << status.ToString() << "\n";
@@ -142,11 +147,23 @@ bool TensorflowLoader::feedPath(const std::string &image_file)
 	return true;
 }
 
+bool TensorflowLoader::feedRawData(unsigned char *data)
+{	
+	m_Clock = clock();
+	auto imageTensor = tensorflow::Tensor(tensorflow::DT_UINT8, {{1, input_height, input_width, wanted_channels}});
+	std::copy_n(data, input_height*input_width*wanted_channels, imageTensor.flat<unsigned char>().data());
+	
+	m_ImageTensor.resize(1);
+	m_ImageTensor[0] = imageTensor;
+	
+	return true;
+}
+
 std::vector<TensorflowLoaderPrediction> TensorflowLoader::doPredict(void)
 {
 	std::vector<TensorflowLoaderPrediction> res;
 	
-	tensorflow::Status status = m_pSession->Run({{m_InputTensorName, m_OutTensor[0]}}, {m_OutputTensorClass, m_OutputTensorScore, m_OutputTensorBox}, {}, &m_Outputs);
+	tensorflow::Status status = m_pSession->Run({{m_InputTensorName, m_ImageTensor[0]}}, {m_OutputTensorClass, m_OutputTensorScore, m_OutputTensorBox}, {}, &m_Outputs);
 	if(!status.ok())
 	{
 		LOG(ERROR) << "Error: Running session failed, reason: " << status.ToString() << "\n";
@@ -156,16 +173,16 @@ std::vector<TensorflowLoaderPrediction> TensorflowLoader::doPredict(void)
 	auto scoreTensor = m_Outputs[1].flat<float>();
 	auto boxTensor = m_Outputs[2].flat<float>();
 	
-	int resPrediction = 0;
+	int resPrediction = 1;
 	float resPredictionProb = 0.0f;
 	int numPrediction = 0;
 	for(int i=0;i<m_Outputs.size();++i)
 	{
 		if(scoreTensor(i) < m_ProbThresh)
-			continue;
+			break;
 		numPrediction = i+1;
 		// [y1, x1, y2, x2];
-		LOG(INFO) << "\tindex: " << i << "\tclass ID: " << classTensor(i) \
+		LOG(INFO) << "\tIndex: " << i << "\tclass ID: " << classTensor(i) \
 					<< "\tCategory: " << m_Category[classTensor(i)-1] \
 					<< " \tProb: " << scoreTensor(i) \
 					<< "\t[" << boxTensor(i*4+1)*input_width << ", " << boxTensor(i*4+0)*input_height \
@@ -178,7 +195,11 @@ std::vector<TensorflowLoaderPrediction> TensorflowLoader::doPredict(void)
 		}
 	}
 	
-	LOG(INFO) << "\nresult  -->  class ID: " << resPrediction << "\tcategory: " << m_Category[resPrediction-1] << " \tProb: " << resPredictionProb << "\n";
+	LOG(INFO) << "\nresult  -->  class ID: " << resPrediction \
+				<< "\tcategory: " << m_Category[resPrediction-1] \
+				<< " \tprob: " << resPredictionProb \
+				<< "\ttime: " << 1.f*(clock() - m_Clock)/1000000.f << "seconds" \
+				<< "\n";
 	
 	if(numPrediction > 0)
 	{
