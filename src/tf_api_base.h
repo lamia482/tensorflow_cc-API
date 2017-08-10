@@ -19,7 +19,7 @@ typedef struct
 	unsigned int height;
 	float confidence;
 }TensorflowLoaderPrediction;
-	
+
 class TensorflowLoaderBase
 {
 public:
@@ -30,8 +30,9 @@ public:
 	virtual bool feedSample(const Sample &) = 0;
 	virtual bool feedPath(const std::string &i) = 0;
 	virtual bool feedRawData(unsigned char *) = 0;
+	virtual bool readOperationName(const std::string &) = 0;
 	virtual std::vector<TensorflowLoaderPrediction> doPredict(void) = 0;
-	
+
 protected:
 	std::string m_InputTensorName;
 	std::string m_OutputTensorName;

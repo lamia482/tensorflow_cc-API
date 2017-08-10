@@ -13,6 +13,7 @@ public:
 	bool feedSample(const Sample &sample);
 	bool feedPath(const std::string &image_file);
 	bool feedRawData(unsigned char *data);
+	bool readOperationName(const std::string &);
 	std::vector<TensorflowLoaderPrediction> doPredict(void);
 };
 

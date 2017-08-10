@@ -159,6 +159,16 @@ bool TensorflowLoader::feedRawData(unsigned char *data)
 	return true;
 }
 
+bool TensorflowLoader::readOperationName(const std::string &model_file)
+{
+	for (int i = 0; i < m_GraphDef.node_size(); ++i)
+	{
+		auto node = m_GraphDef.node(i);
+		LOG(INFO) << node.name().find("op") << "\n";
+	}
+	return true;
+}
+
 std::vector<TensorflowLoaderPrediction> TensorflowLoader::doPredict(void)
 {
 	std::vector<TensorflowLoaderPrediction> res;
