@@ -32,7 +32,7 @@ bool TensorflowLoader::loadModel(const std::string &model_file)
 		LOG(ERROR) << "Error: Create session failed, reason: " << status.ToString() << "\n";
 		return false;
 	}
-	
+
 	if(model_file == "")
 	{
 		LOG(ERROR) << "Error: Loading model file<" << model_file << "> failed, reason: model_file is empty\n";
@@ -51,7 +51,7 @@ bool TensorflowLoader::loadModel(const std::string &model_file)
 		LOG(ERROR) << "Error: Create model grash failed, reason: " << status.ToString() << "\n";
 		return false;
 	}
-	
+
 	return true;
 }
 
@@ -79,14 +79,14 @@ bool TensorflowLoader::feedSample(const Sample &sample)
 		LOG(ERROR) << "Error: Sample being ruined\n";
 		return false;
 	}
-	
+
 	m_Sample = tensorflow::Tensor(tensorflow::DT_FLOAT, tensorflow::TensorShape({1, sampleSize}));
-	
+
 	for(int i=0;i<sampleSize;++i)
 		m_Sample.flat<float>()(i) = sample[i];
-	
+
 	m_Samples.push_back(std::pair<std::string, tensorflow::Tensor>(m_InputTensorName, m_Sample));
-	
+
 	return true;
 }
 
@@ -100,20 +100,20 @@ bool TensorflowLoader::feedPath(const std::string &image_file)
 	tensorflow::string output_name = "normalized";
 	auto file_reader = tensorflow::ops::ReadFile(root.WithOpName(input_name), image_file);
 	tensorflow::Output image_reader;
-	if (tensorflow::StringPiece(image_file).ends_with(".png")) 
+	if (tensorflow::StringPiece(image_file).ends_with(".png"))
 	{
 		image_reader = tensorflow::ops::DecodePng(root.WithOpName("png_reader"), file_reader, tensorflow::ops::DecodePng::Channels(wanted_channels));
-	} 
-	else if (tensorflow::StringPiece(image_file).ends_with(".gif")) 
+	}
+	else if (tensorflow::StringPiece(image_file).ends_with(".gif"))
 	{
 		image_reader = tensorflow::ops::DecodeGif(root.WithOpName("gif_reader"), file_reader);
-	} 
+	}
 	else if (tensorflow::StringPiece(image_file).ends_with(".jpg"))
 	{
 		// Assume if it's neither a PNG nor a GIF then it must be a JPEG.
 		image_reader = tensorflow::ops::DecodeJpeg(root.WithOpName("jpg_reader"), file_reader, tensorflow::ops::DecodeJpeg::Channels(wanted_channels));
 	}
-	
+
 	auto original_image = tensorflow::ops::Identity(root.WithOpName(original_name), image_reader);
 	// auto float_caster = tensorflow::ops::Cast(root.WithOpName("float_caster"), original_image, tensorflow::DT_FLOAT);
 	auto dims_expander = tensorflow::ops::ExpandDims(root.WithOpName("dims_expander"), original_image, 0);
@@ -148,21 +148,21 @@ bool TensorflowLoader::feedPath(const std::string &image_file)
 }
 
 bool TensorflowLoader::feedRawData(unsigned char *data)
-{	
+{
 	m_Clock = clock();
 	auto imageTensor = tensorflow::Tensor(tensorflow::DT_UINT8, {{1, input_height, input_width, wanted_channels}});
 	std::copy_n(data, input_height*input_width*wanted_channels, imageTensor.flat<unsigned char>().data());
-	
+
 	m_ImageTensor.resize(1);
 	m_ImageTensor[0] = imageTensor;
-	
+
 	return true;
 }
 
 std::vector<TensorflowLoaderPrediction> TensorflowLoader::doPredict(void)
 {
 	std::vector<TensorflowLoaderPrediction> res;
-	
+
 	tensorflow::Status status = m_pSession->Run({{m_InputTensorName, m_ImageTensor[0]}}, {m_OutputTensorClass, m_OutputTensorScore, m_OutputTensorBox}, {}, &m_Outputs);
 	if(!status.ok())
 	{
@@ -172,7 +172,7 @@ std::vector<TensorflowLoaderPrediction> TensorflowLoader::doPredict(void)
 	auto classTensor = m_Outputs[0].flat<float>();
 	auto scoreTensor = m_Outputs[1].flat<float>();
 	auto boxTensor = m_Outputs[2].flat<float>();
-	
+
 	int resPrediction = 1;
 	float resPredictionProb = 0.0f;
 	int numPrediction = 0;
@@ -194,13 +194,13 @@ std::vector<TensorflowLoaderPrediction> TensorflowLoader::doPredict(void)
 			resPrediction = classTensor(i);
 		}
 	}
-	
+
 	LOG(INFO) << "\nresult  -->  class ID: " << resPrediction \
 				<< "\tcategory: " << m_Category[resPrediction-1] \
 				<< " \tprob: " << resPredictionProb \
 				<< "\ttime: " << 1.f*(clock() - m_Clock)/1000000.f << "seconds" \
 				<< "\n";
-	
+
 	if(numPrediction > 0)
 	{
 		res.resize(numPrediction);
@@ -214,9 +214,6 @@ std::vector<TensorflowLoaderPrediction> TensorflowLoader::doPredict(void)
 			res[i].confidence	= scoreTensor(i);
 		}
 	}
-	
+
 	return res;
 }
-
-
-
