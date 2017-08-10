@@ -1,1 +1,19 @@
 A class to load tf models and do predict
+
+Step 1:
+  put tensorflow head files into ./include
+  put libtensorflow_cc.so and libcudnn.so into ./lib
+  # if do not have, uhm...
+  # follow tensorflow home page or find other ways...
+
+Step 2:
+  put category.txt and model.pb in ./resource
+  modify the operation name in TensorflowLoader::doPredict()
+  ./build.sh
+  # This may clean up and build:
+    tf_api.o in ./obj
+    gen in ./bin
+    libtfloader.so and libtfloader.a in ./lib
+
+Step 3:
+  ./run.sh

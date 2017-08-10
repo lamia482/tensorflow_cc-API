@@ -1,0 +1,3 @@
+This folder contains:
+  libcudnn.so --version 5.1
+  libtensorflow_cc.so --version r1.2 with cuda
