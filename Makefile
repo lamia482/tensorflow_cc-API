@@ -1,4 +1,5 @@
-EXE = ./bin/gen
+BIN_DIR = ./bin/
+EXE = ./$(BIN_DIR)gen
 SRC_DIR = ./src/
 EXE_SRC = $(SRC_DIR)main.cc
 
@@ -32,7 +33,7 @@ default: $(EXE)
 all: $(EXE) $(DYNAMIC) $(STATIC)
 	@echo '---------------- DONE FOR ALL ---------------'
 
-$(EXE): $(OBJS)
+$(EXE): make_dir $(OBJS)
 	$(CC_COMPILER) $(EXE_SRC) -o $(EXE) $(INCLUDE_PATH) $(LD_LIBRARY_PATH) $(CFLAGS) $(LD_FLAGS) $(OBJS)
 
 $(OBJS_DIR)%.o: $(SRC_DIR)%.cc
@@ -43,6 +44,9 @@ $(DYNAMIC): $(OBJS)
 
 $(STATIC):	$(OBJS)
 	$(AR) rsv $(STATIC_LIB) $(OBJS)
+
+make_dir:
+	mkdir -p $(BIN_DIR) $(OBJS_DIR)
 
 clean:
 	rm -f $(OBJS) $(EXE) $(DYNAMIC_LIB) $(STATIC_LIB)

@@ -41,8 +41,8 @@ START:
 	// cv::Mat image = cv::imread(image_file);
 	// if(image.empty())
 	// {
-		// LOG(ERROR) << "Error: Imread image failed\n";
-		// return -5;
+	// 	LOG(ERROR) << "Error: Imread image failed\n";
+	// 	return -5;
 	// }
 	unsigned char *data = new unsigned char[640*424*3];
 	memset(data, 0, 640*424*3*sizeof(unsigned char));
