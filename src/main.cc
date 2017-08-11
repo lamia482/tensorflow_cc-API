@@ -1,4 +1,9 @@
-#include "tf_api.h"
+#include "tensorflow_loader.h"
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <unistd.h>
+#include <glog/logging.h>
 #include <opencv2/opencv.hpp>
 
 int main(int argc, char **argv)
@@ -28,12 +33,6 @@ START:
 		return -2;
 	}
 
-	if(!tfLoader->feedSample(Sample({1.f, 1.f, 1.f, 1.f, 1.f})))
-	{
-		LOG(ERROR) << "Error: Fatal errors in feeding a sample\n";
-		return -3;
-	}
-
   std::vector<TensorflowLoaderPrediction> tfPred;
 	if(!tfLoader->feedPath(image_file))
 	{
@@ -47,13 +46,13 @@ START:
 		return -8;
 	}
 
-	cv::Mat image = cv::imread(image_file);
-	if(image.empty())
-	{
-		LOG(ERROR) << "Error: Imread image failed\n";
-		return -5;
-	}
-	/*
+	// cv::Mat image = cv::imread(image_file);
+	// if(image.empty())
+	// {
+	// 	LOG(ERROR) << "Error: Imread image failed\n";
+	// 	return -5;
+	// }
+
 	unsigned char *data = new unsigned char[640*424*3];
 	memset(data, 0, 640*424*3*sizeof(unsigned char));
 	FILE *fp = NULL;
@@ -64,9 +63,9 @@ START:
 		return -6;
 	}
 	fread(data, 1, 640*424*3*sizeof(unsigned char), fp);
-	*/
+	fclose(fp);
 REPEATE:
-	if(!tfLoader->feedRawData(image.data))
+	if(!tfLoader->feedRawData(data))
 	{
 		LOG(ERROR) << "Error: Fatal errors in fetching data\n";
 		return -7;
@@ -78,17 +77,17 @@ REPEATE:
 		LOG(ERROR) << "Error: Fatal error in predicting\n";
 		return -8;
 	}
-	// goto REPEATE;
+	goto REPEATE;
 
-	for(int i=0;i<tfPred.size();++i)
-	{
-		cv::rectangle(image, cv::Rect(tfPred[i].lefttopx, tfPred[i].lefttopy, tfPred[i].width, tfPred[i].height),
-		cv::Scalar(0, 0, 255), 3);
-	}
-	cv::imwrite("save.jpg", image);
+	// for(int i=0;i<tfPred.size();++i)
+	// {
+	// 	cv::rectangle(image, cv::Rect(tfPred[i].lefttopx, tfPred[i].lefttopy, tfPred[i].width, tfPred[i].height),
+	// 	cv::Scalar(0, 0, 255), 3);
+	// }
+	// cv::imwrite("save.jpg", image);
 
 
-	// delete data;
+	delete data;
 	delete tfLoader;
 
 	return 0;

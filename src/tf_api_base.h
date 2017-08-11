@@ -9,7 +9,6 @@
 #include <tensorflow/core/public/session.h>
 #include <tensorflow/core/platform/env.h>
 
-typedef std::vector<float> Sample;
 typedef struct
 {
 	unsigned int category;
@@ -18,20 +17,19 @@ typedef struct
 	unsigned int width;
 	unsigned int height;
 	float confidence;
-}TensorflowLoaderPrediction;
+}TensorflowApiPrediction;
 
-class TensorflowLoaderBase
+class TensorflowApiBase
 {
 public:
-	TensorflowLoaderBase(void){}
-	virtual ~TensorflowLoaderBase(void){}
+	TensorflowApiBase(void){}
+	virtual ~TensorflowApiBase(void){}
 	virtual bool loadModel(const std::string &) = 0;
 	virtual bool loadLabel(const std::string &) = 0;
-	virtual bool feedSample(const Sample &) = 0;
 	virtual bool feedPath(const std::string &i) = 0;
-	virtual bool feedRawData(unsigned char *) = 0;
+	virtual bool feedRawData(const unsigned char *) = 0;
 	virtual bool readOperationName(const std::string &) = 0;
-	virtual std::vector<TensorflowLoaderPrediction> doPredict(void) = 0;
+	virtual std::vector<TensorflowApiPrediction> doPredict(void) = 0;
 
 protected:
 	std::string m_InputTensorName;

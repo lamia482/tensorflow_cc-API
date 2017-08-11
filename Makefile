@@ -1,14 +1,14 @@
 BIN_DIR = ./bin/
-EXE = ./$(BIN_DIR)gen
+EXE = $(BIN_DIR)gen
 SRC_DIR = ./src/
 EXE_SRC = $(SRC_DIR)main.cc
 
 C_COMPILER = gcc
 CC_COMPILER = g++
 
-INCLUDE_PATH = 	-I./include \
-								-I$(SRC_DIR) \
-				`pkg-config --cflags opencv`
+INCLUDE_PATH = -I./include \
+               -I$(SRC_DIR) \
+               `pkg-config --cflags opencv`
 
 CFLAGS = -g -std=c++11
 OPTS = -fPIC -shared
@@ -20,21 +20,21 @@ STATIC_LIB = ./lib/libtfloader.a
 
 LD_LIBRARY_PATH = -L./lib
 
-LD_FLAGS = 	-ltensorflow_cc -lcudnn -lglog \
-			`pkg-config --libs opencv` \
-			-lm -lpthread
+LD_FLAGS = -ltensorflow_cc -lcudnn -lglog \
+           `pkg-config --libs opencv` \
+            -lm -lpthread
 
-OBJ = tf_api.o
+OBJ = tensorflow_loader.o tf_api.o
 OBJS_DIR = ./obj/
 OBJS = $(addprefix $(OBJS_DIR), $(OBJ))
 
 default: $(EXE)
 
-all: $(EXE) $(DYNAMIC) $(STATIC)
+all: $(DYNAMIC) $(STATIC) $(EXE)
 	@echo '---------------- DONE FOR ALL ---------------'
 
 $(EXE): make_dir $(OBJS)
-	$(CC_COMPILER) $(EXE_SRC) -o $(EXE) $(INCLUDE_PATH) $(LD_LIBRARY_PATH) $(CFLAGS) $(LD_FLAGS) $(OBJS)
+	$(CC_COMPILER) $(EXE_SRC) -o $(EXE) $(INCLUDE_PATH) $(LD_LIBRARY_PATH) $(CFLAGS) $(OBJS) $(LD_FLAGS)
 
 $(OBJS_DIR)%.o: $(SRC_DIR)%.cc
 	$(CC_COMPILER) $(INCLUDE_PATH) $(LD_LIBRARY_PATH) $(CFLAGS) $(OPTS) -c $< -o $@
@@ -49,4 +49,4 @@ make_dir:
 	mkdir -p $(BIN_DIR) $(OBJS_DIR)
 
 clean:
-	rm -f $(OBJS) $(EXE) $(DYNAMIC_LIB) $(STATIC_LIB)
+	rm -rf $(OBJS) $(EXE) $(DYNAMIC_LIB) $(STATIC_LIB) $(BIN_DIR) $(OBJ_DIR)

@@ -1,6 +1,6 @@
 #include "tf_api.h"
 
-TensorflowLoader::TensorflowLoader()
+TensorflowApi::TensorflowApi()
 {
 	m_InputTensorName = "image_tensor:0";
 	m_OutputTensorName = "";
@@ -15,17 +15,18 @@ TensorflowLoader::TensorflowLoader()
 	m_ProbThresh = .6;
 }
 
-TensorflowLoader::~TensorflowLoader()
+TensorflowApi::~TensorflowApi()
 {
 	m_pSession->Close();
 }
 
-bool TensorflowLoader::loadModel(const std::string &model_file)
+bool TensorflowApi::loadModel(const std::string &model_file)
 {
 	// tensorflow::GPUOptions gpuConfig;
 	// gpuConfig.set_per_process_gpu_memory_fraction(.5);
 	tensorflow::SessionOptions sessionConfig;
-	// sessionConfig.config.set_allocated_gpu_options(&gpuConfig);
+	sessionConfig.config.mutable_gpu_options()->set_per_process_gpu_memory_fraction(.1);
+	sessionConfig.config.mutable_gpu_options()->set_allow_growth(true);
 	tensorflow::Status status = tensorflow::NewSession(sessionConfig, &m_pSession);
 	if(!status.ok())
 	{
@@ -55,7 +56,7 @@ bool TensorflowLoader::loadModel(const std::string &model_file)
 	return true;
 }
 
-bool TensorflowLoader::loadLabel(const std::string &label_file)
+bool TensorflowApi::loadLabel(const std::string &label_file)
 {
 	m_LabelFile = label_file;
 	std::ifstream labels(m_LabelFile.c_str());
@@ -66,31 +67,7 @@ bool TensorflowLoader::loadLabel(const std::string &label_file)
 	return true;
 }
 
-bool TensorflowLoader::feedSample(const Sample &sample)
-{
-	int sampleSize = sample.size();
-	if(sampleSize == 0)
-	{
-		LOG(WARNING) << "Warning: Sample being empty\n";
-		return true;
-	}
-	else if(sampleSize < 0)
-	{
-		LOG(ERROR) << "Error: Sample being ruined\n";
-		return false;
-	}
-
-	m_Sample = tensorflow::Tensor(tensorflow::DT_FLOAT, tensorflow::TensorShape({1, sampleSize}));
-
-	for(int i=0;i<sampleSize;++i)
-		m_Sample.flat<float>()(i) = sample[i];
-
-	m_Samples.push_back(std::pair<std::string, tensorflow::Tensor>(m_InputTensorName, m_Sample));
-
-	return true;
-}
-
-bool TensorflowLoader::feedPath(const std::string &image_file)
+bool TensorflowApi::feedPath(const std::string &image_file)
 {
 	m_Clock = clock();
 	// tensorflow::ops::DecodeRaw()
@@ -147,7 +124,7 @@ bool TensorflowLoader::feedPath(const std::string &image_file)
 	return true;
 }
 
-bool TensorflowLoader::feedRawData(unsigned char *data)
+bool TensorflowApi::feedRawData(const unsigned char *data)
 {
 	m_Clock = clock();
 	auto imageTensor = tensorflow::Tensor(tensorflow::DT_UINT8, {{1, input_height, input_width, wanted_channels}});
@@ -159,7 +136,7 @@ bool TensorflowLoader::feedRawData(unsigned char *data)
 	return true;
 }
 
-bool TensorflowLoader::readOperationName(const std::string &model_file)
+bool TensorflowApi::readOperationName(const std::string &model_file)
 {
 	for (int i = 0; i < m_GraphDef.node_size(); ++i)
 	{
@@ -169,9 +146,9 @@ bool TensorflowLoader::readOperationName(const std::string &model_file)
 	return true;
 }
 
-std::vector<TensorflowLoaderPrediction> TensorflowLoader::doPredict(void)
+std::vector<TensorflowApiPrediction> TensorflowApi::doPredict(void)
 {
-	std::vector<TensorflowLoaderPrediction> res;
+	std::vector<TensorflowApiPrediction> res;
 
 	tensorflow::Status status = m_pSession->Run({{m_InputTensorName, m_ImageTensor[0]}}, {m_OutputTensorClass, m_OutputTensorScore, m_OutputTensorBox}, {}, &m_Outputs);
 	if(!status.ok())
@@ -217,10 +194,10 @@ std::vector<TensorflowLoaderPrediction> TensorflowLoader::doPredict(void)
 		for(int i=0;i<numPrediction;++i)
 		{
 			res[i].category		= classTensor(i);
-			res[i].lefttopx		= boxTensor(i*4+1) * input_width;
 			res[i].lefttopy		= boxTensor(i*4+0) * input_height;
-			res[i].width		= boxTensor(i*4+3) * input_width - res[i].lefttopx;
-			res[i].height		= boxTensor(i*4+2) * input_height - res[i].lefttopy;
+			res[i].lefttopx		= boxTensor(i*4+1) * input_width;
+			res[i].height			= boxTensor(i*4+2) * input_height - res[i].lefttopy;
+			res[i].width			= boxTensor(i*4+3) * input_width - res[i].lefttopx;
 			res[i].confidence	= scoreTensor(i);
 		}
 	}
