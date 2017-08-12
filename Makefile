@@ -10,7 +10,7 @@ INCLUDE_PATH = -I./include \
                -I$(SRC_DIR) \
                `pkg-config --cflags opencv`
 
-CFLAGS = -g -std=c++11
+CFLAGS = -g -std=c++11 -DLinux
 OPTS = -fPIC -shared
 
 DYNAMIC = make_so
@@ -24,7 +24,7 @@ LD_FLAGS = -ltensorflow_cc -lcudnn -lglog \
            `pkg-config --libs opencv` \
             -lm -lpthread
 
-OBJ = tensorflow_loader.o tf_api.o
+OBJ = tensorflow_loader.o tf_api.o laMiaSocket.o
 OBJS_DIR = ./obj/
 OBJS = $(addprefix $(OBJS_DIR), $(OBJ))
 

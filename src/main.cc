@@ -1,15 +1,25 @@
-#include "tensorflow_loader.h"
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <unistd.h>
 #include <glog/logging.h>
 #include <opencv2/opencv.hpp>
+#include "tensorflow_loader.h"
+#include "laMiaSocket.h"
 
 int main(int argc, char **argv)
 {
 START:
 	TensorflowLoader *tfLoader = new TensorflowLoader();
+ 	laMiaSocket *ls = new laMiaSocket();
+	ls->setPort(4999);
+	{
+		ls->setRole(laMiaSocketTypeClient);
+		std::string ip_addr;
+		std::cerr << "Client selected, choose server ip: ";
+		std::cin >> ip_addr;
+		ls->connectServer(ip_addr.c_str());
+	}
 
 	std::string image_file = "images/image3.jpg";
 
@@ -34,17 +44,6 @@ START:
 	}
 
   std::vector<TensorflowLoaderPrediction> tfPred;
-	if(!tfLoader->feedPath(image_file))
-	{
-		LOG(ERROR) << "Error: Fatal errors in reading from image\n";
-		return -4;
-	}
-	 tfPred = tfLoader->doPredict();
-	if(!tfPred.size())
-	{
-		LOG(ERROR) << "Error: Fatal error in predicting\n";
-		return -8;
-	}
 
 	// cv::Mat image = cv::imread(image_file);
 	// if(image.empty())
@@ -77,6 +76,12 @@ REPEATE:
 		LOG(ERROR) << "Error: Fatal error in predicting\n";
 		return -8;
 	}
+	char *buffer = new char[256];
+	memset(buffer, 0, 256);
+	buffer[0] = tfPred.size();
+	memcpy((void*)&buffer[1], (void*)&tfPred[0], tfPred.size()*sizeof(TensorflowLoaderPrediction));
+	ls->sendMessage(buffer);
+
 	goto REPEATE;
 
 	// for(int i=0;i<tfPred.size();++i)
