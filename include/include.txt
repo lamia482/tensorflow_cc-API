@@ -1,3 +1,0 @@
-This folder contains:
-  tensorflow include folder --version r1.2
-  
