@@ -25,7 +25,7 @@ bool TensorflowApi::loadModel(const std::string &model_file)
 	// tensorflow::GPUOptions gpuConfig;
 	// gpuConfig.set_per_process_gpu_memory_fraction(.5);
 	tensorflow::SessionOptions sessionConfig;
-	sessionConfig.config.mutable_gpu_options()->set_per_process_gpu_memory_fraction(.1);
+	sessionConfig.config.mutable_gpu_options()->set_per_process_gpu_memory_fraction(.4);
 	sessionConfig.config.mutable_gpu_options()->set_allow_growth(true);
 	tensorflow::Status status = tensorflow::NewSession(sessionConfig, &m_pSession);
 	if(!status.ok())
@@ -59,11 +59,23 @@ bool TensorflowApi::loadModel(const std::string &model_file)
 bool TensorflowApi::loadLabel(const std::string &label_file)
 {
 	m_LabelFile = label_file;
-	std::ifstream labels(m_LabelFile.c_str());
-	std::string line;
-	while(std::getline(labels, line))
-		m_Category.push_back(line);
-	labels.close();
+	std::ifstream labels(m_LabelFile);
+	if (!labels) {
+    LOG(WARNING) << "Warning: No file: " << label_file << " exists\n";
+		return false;
+  }
+	if(tensorflow::StringPiece(label_file).ends_with(".txt"))
+	{
+		std::string line;
+		int idx = 1;
+		while(std::getline(labels, line))
+		{
+			m_Category.push_back(line);
+			m_Label[idx++] = line;
+		}
+		labels.close();
+	}
+
 	return true;
 }
 
@@ -169,9 +181,9 @@ std::vector<TensorflowApiPrediction> TensorflowApi::doPredict(void)
 			break;
 		numPrediction = i+1;
 		// [y1, x1, y2, x2];
-		LOG(INFO) << "\tIndex: " << i << "\tclass ID: " << classTensor(i) \
-					<< "\tCategory: " << m_Category[classTensor(i)-1] \
-					<< " \tProb: " << scoreTensor(i) \
+		LOG(INFO) << " Index: " << i << "\tclass ID: " << classTensor(i) \
+					<< "\tCategory: " << m_Label[classTensor(i)] \
+					<< "\tProb: " << scoreTensor(i) \
 					<< "\t[" << boxTensor(i*4+1)*input_width << ", " << boxTensor(i*4+0)*input_height \
 					<< ", " << boxTensor(i*4+3)*input_width - boxTensor(i*4+1)*input_width \
 					<< ", " << boxTensor(i*4+2)*input_height - boxTensor(i*4+0)*input_height << "]";
@@ -182,9 +194,9 @@ std::vector<TensorflowApiPrediction> TensorflowApi::doPredict(void)
 		}
 	}
 
-	LOG(INFO) << "\nresult  -->  class ID: " << resPrediction \
-				<< "\tcategory: " << m_Category[resPrediction-1] \
-				<< " \tprob: " << resPredictionProb \
+	LOG(INFO) << " result   -->  class ID: " << resPrediction \
+				<< "\tcategory: " << m_Label[resPrediction] \
+				<< "\tprob: " << resPredictionProb \
 				<< "\ttime: " << 1.f*(clock() - m_Clock)/1000000.f << "seconds" \
 				<< "\n";
 

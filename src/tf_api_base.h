@@ -41,6 +41,7 @@ protected:
 	std::vector<std::pair<std::string, tensorflow::Tensor> > m_Samples;
 	std::string m_LabelFile;
 	std::vector<std::string> m_Category;
+	std::map<int, std::string> m_Label;
 	std::string m_ModelFile;
 	tensorflow::Session *m_pSession;
 	tensorflow::GraphDef m_GraphDef;

@@ -1,8 +1,9 @@
-A class to load tf models and do predict
+A class to load tf models and do predict by Makefile
 
 Step 1:
-  put tensorflow head files into ./include
-  put libtensorflow_cc.so and libcudnn.so into ./lib
+  put tensorflow head files into as include < you may need do '  ln -s /absolute/path/to/your/tensorflow/header/folder /absolute/dst/path  '  or just copy that folder here >
+  (in this repo, include is a softlink to my local machine's folder)
+  put libtensorflow_cc.so and libcudnn.so into ./lib (the same as include)
   # if do not have, uhm...
   # follow tensorflow home page or find other ways...
 
@@ -17,3 +18,18 @@ Step 2:
 
 Step 3:
   ./run.sh
+
+-------------------------------
+Errors may occur, mainly because of the -I or -L and -l not included...
+
+
+------------------------------  Intro
+TensorflowLoader is such a class that does:
+1. loadModel() and loadLabel() allow to load model via each file name.
+2. feedPath() allow to obtain image from a file path.
+3. feedRawData() allow to get data from a camera RGB data.
+4. doPredict() returns the prediction containing the info of coordinate and confidence and its category.
+
+laMiaSocket is such a class that does:
+1. select whether client or server
+2. send message between client and server

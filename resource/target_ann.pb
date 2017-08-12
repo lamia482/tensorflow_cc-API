@@ -1,1 +1,0 @@
-/home/e0024/workspace/cxx/tensorflow/test/model/nn_model_frozen.pb

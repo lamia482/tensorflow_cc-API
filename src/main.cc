@@ -7,18 +7,24 @@
 #include "tensorflow_loader.h"
 #include "laMiaSocket.h"
 
+const bool B_SEND_MESSAGE = false;
+
 int main(int argc, char **argv)
 {
 START:
 	TensorflowLoader *tfLoader = new TensorflowLoader();
- 	laMiaSocket *ls = new laMiaSocket();
-	ls->setPort(4999);
+	laMiaSocket *ls = NULL;
+	if(B_SEND_MESSAGE)
 	{
-		ls->setRole(laMiaSocketTypeClient);
-		std::string ip_addr;
-		std::cerr << "Client selected, choose server ip: ";
-		std::cin >> ip_addr;
-		ls->connectServer(ip_addr.c_str());
+		ls = new laMiaSocket();
+		ls->setPort(4999);
+		{
+			ls->setRole(laMiaSocketTypeClient);
+			std::string ip_addr;
+			std::cerr << "Client selected, choose server ip: ";
+			std::cin >> ip_addr;
+			ls->connectServer(ip_addr.c_str());
+		}
 	}
 
 	std::string image_file = "images/image3.jpg";
@@ -76,11 +82,16 @@ REPEATE:
 		LOG(ERROR) << "Error: Fatal error in predicting\n";
 		return -8;
 	}
-	char *buffer = new char[256];
-	memset(buffer, 0, 256);
-	buffer[0] = tfPred.size();
-	memcpy((void*)&buffer[1], (void*)&tfPred[0], tfPred.size()*sizeof(TensorflowLoaderPrediction));
-	ls->sendMessage(buffer);
+	if(B_SEND_MESSAGE)
+	{
+		char *buffer = new char[256];
+		memset(buffer, 0, 256);
+		buffer[0] = tfPred.size();
+		memcpy((void*)&buffer[1], (void*)&tfPred[0], tfPred.size()*sizeof(TensorflowLoaderPrediction));
+		ls->sendMessage(buffer);
+		delete buffer;
+	}
+
 
 	goto REPEATE;
 
