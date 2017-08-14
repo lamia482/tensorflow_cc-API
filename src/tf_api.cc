@@ -3,15 +3,14 @@
 TensorflowApi::TensorflowApi()
 {
 	m_InputTensorName = "image_tensor:0";
-	m_OutputTensorName = "";
+	m_OutputTensorBox = "detection_boxes:0";
 	m_OutputTensorScore = "detection_scores:0";
 	m_OutputTensorClass = "detection_classes:0";
-	m_OutputTensorBox = "detection_boxes:0";
+	m_OutputTensorNum = "num_detections:0";
+
 	input_width = 640;
 	input_height = 424;
 	wanted_channels = 3;
-	input_mean = 128;
-	input_std = 128;
 	m_ProbThresh = .6;
 }
 
@@ -153,8 +152,9 @@ bool TensorflowApi::readOperationName(const std::string &model_file)
 	for (int i = 0; i < m_GraphDef.node_size(); ++i)
 	{
 		auto node = m_GraphDef.node(i);
-		LOG(INFO) << node.name().find("op") << "\n";
+		LOG(INFO) << node.name() << "  " << node.op() << "\n";
 	}
+
 	return true;
 }
 
@@ -162,20 +162,21 @@ std::vector<TensorflowApiPrediction> TensorflowApi::doPredict(void)
 {
 	std::vector<TensorflowApiPrediction> res;
 
-	tensorflow::Status status = m_pSession->Run({{m_InputTensorName, m_ImageTensor[0]}}, {m_OutputTensorClass, m_OutputTensorScore, m_OutputTensorBox}, {}, &m_Outputs);
+	tensorflow::Status status = m_pSession->Run({{m_InputTensorName, m_ImageTensor[0]}}, {m_OutputTensorBox, m_OutputTensorScore, m_OutputTensorClass, m_OutputTensorNum}, {}, &m_Outputs);
 	if(!status.ok())
 	{
 		LOG(ERROR) << "Error: Running session failed, reason: " << status.ToString() << "\n";
 		return res;
 	}
-	auto classTensor = m_Outputs[0].flat<float>();
+	auto boxTensor = m_Outputs[0].flat<float>();
 	auto scoreTensor = m_Outputs[1].flat<float>();
-	auto boxTensor = m_Outputs[2].flat<float>();
+	auto classTensor = m_Outputs[2].flat<float>();
+	auto numTensor = m_Outputs[3].flat<float>();
 
 	int resPrediction = 1;
 	float resPredictionProb = 0.0f;
 	int numPrediction = 0;
-	for(int i=0;i<m_Outputs.size();++i)
+	for(int i=0;i<numTensor(0);++i)
 	{
 		if(scoreTensor(i) < m_ProbThresh)
 			break;

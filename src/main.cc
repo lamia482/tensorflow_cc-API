@@ -93,7 +93,7 @@ REPEATE:
 	}
 
 
-	goto REPEATE;
+	// goto REPEATE;
 
 	// for(int i=0;i<tfPred.size();++i)
 	// {

@@ -33,10 +33,10 @@ public:
 
 protected:
 	std::string m_InputTensorName;
-	std::string m_OutputTensorName;
+	std::string m_OutputTensorBox;
 	std::string m_OutputTensorScore;
 	std::string m_OutputTensorClass;
-	std::string m_OutputTensorBox;
+	std::string m_OutputTensorNum;
 	tensorflow::Tensor m_Sample;
 	std::vector<std::pair<std::string, tensorflow::Tensor> > m_Samples;
 	std::string m_LabelFile;
