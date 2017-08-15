@@ -6,6 +6,7 @@ Step 1:
   put libtensorflow_cc.so and libcudnn.so into ./lib (the same as include)
   # if do not have, uhm...
   # follow tensorflow home page or find other ways...
+  # my includes and lib(tf api r1.2) now uploaded at ' https://drive.google.com/open?id=0B9BHx-TgQtxjcXhEQU5YazVnbWM ' also can download and tar it
 
 Step 2:
   put category.txt and model.pb in ./resource
@@ -28,7 +29,8 @@ TensorflowLoader is such a class that does:
 1. loadModel() and loadLabel() allow to load model via each file name.
 2. feedPath() allow to obtain image from a file path.
 3. feedRawData() allow to get data from a camera RGB data.
-4. doPredict() returns the prediction containing the info of coordinate and confidence and its category.
+4. readOperationName() to get operations in defined in pb file, so that we can execute other words, sess->Run() for this operation.
+5. doPredict() returns the prediction containing the info of coordinate and confidence and its category.
 
 laMiaSocket is such a class that does:
 1. select whether client or server
