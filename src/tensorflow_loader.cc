@@ -46,3 +46,8 @@ std::vector<TensorflowLoaderPrediction> TensorflowLoader::doPredict(void)
   memcpy(&res[0], &src[0], res.size()*sizeof(TensorflowLoaderPrediction));
   return res;
 }
+
+std::string TensorflowLoader::readOption(const char *option)
+{
+  return (std::string)(m_pTensorflowApi->getReadOption()->read(option));
+}

@@ -27,6 +27,7 @@ public:
   bool feedRawData(const unsigned char *);
   bool readOperationName(const std::string &);
   std::vector<TensorflowLoaderPrediction> doPredict(void);
+  std::string readOption(const char *);
 private:
   TensorflowApi *m_pTensorflowApi;
 };

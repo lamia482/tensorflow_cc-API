@@ -5,9 +5,13 @@
 #include <fstream>
 #include <string>
 #include <unistd.h>
+#include <map>
 #include <tensorflow/cc/ops/standard_ops.h>
 #include <tensorflow/core/public/session.h>
 #include <tensorflow/core/platform/env.h>
+
+#include "timer.h"
+#include "read_options.h"
 
 typedef struct
 {
@@ -51,6 +55,8 @@ protected:
 	std::vector<tensorflow::Tensor> m_ImageTensor;
 	std::vector<tensorflow::Tensor> m_Outputs;
 	clock_t m_Clock;
+  Markt *m_pMarkt;
+  ReadOptions *m_pReadOptions;
 };
 
 

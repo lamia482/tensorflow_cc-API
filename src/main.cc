@@ -6,15 +6,14 @@
 #include <opencv2/opencv.hpp>
 #include "tensorflow_loader.h"
 #include "laMiaSocket.h"
-#include "read_options.h"
 
 int main(int argc, char **argv)
 {
 START:
 	TensorflowLoader *tfLoader = new TensorflowLoader();
-  ReadOptions *rp = new ReadOptions("resource/default.cfg");
+  
 	laMiaSocket *ls = NULL;
-	if(std::atoi(rp->read("message")))
+	if(std::atoi(tfLoader->readOption("message").c_str()))
 	{
 		ls = new laMiaSocket();
 		ls->setPort(4999);
@@ -27,15 +26,15 @@ START:
 		}
 	}
 
-	std::string image_file = (std::string)(rp->read("image_file"));
+	std::string image_file = tfLoader->readOption("image_file");
 
-	if(!tfLoader->loadModel((std::string)(rp->read("model_file"))))
+	if(!tfLoader->loadModel(tfLoader->readOption("model_file")))
 	{
 		LOG(ERROR) << "Error: Fatal errors in loading model\n";
 		return -1;
 	}
 
-  if(std::atoi((rp->read("readoperations"))))
+  if(std::atoi(tfLoader->readOption("readoperations").c_str()))
   {
     if(!tfLoader->readOperationName(""))
     {
@@ -44,7 +43,7 @@ START:
     }
 	}
 
-	if(!tfLoader->loadLabel((std::string)(rp->read("label_file"))))
+	if(!tfLoader->loadLabel(tfLoader->readOption("label_file")))
 	{
 		LOG(ERROR) << "Error: Fatal errors in loading category\n";
 		return -2;
@@ -52,7 +51,7 @@ START:
 
   std::vector<TensorflowLoaderPrediction> tfPred;
   cv::Mat image;
-	if(std::atoi(rp->read("opencv")))
+	if(std::atoi(tfLoader->readOption("opencv").c_str()))
   {
      image = cv::imread(image_file);
     if(image.empty())
@@ -65,10 +64,10 @@ START:
 	unsigned char *data = new unsigned char[640*424*3];
 	memset(data, 0, 640*424*3*sizeof(unsigned char));
 	FILE *fp = NULL;
-	fp = fopen(rp->read("image_data"), "rb");
+	fp = fopen(tfLoader->readOption("image_data").c_str(), "rb");
 	if(fp == NULL)
 	{
-		LOG(ERROR) << "File: " << rp->read("image_data") << " open failed\n";
+		LOG(ERROR) << "File: " << tfLoader->readOption("image_data") << " open failed\n";
 		return -6;
 	}
 	fread(data, 1, 640*424*3*sizeof(unsigned char), fp);
@@ -86,7 +85,7 @@ REPEATE:
 		LOG(ERROR) << "Error: Fatal error in predicting\n";
 		return -8;
 	}
-	if(std::stoi(rp->read("message")))
+	if(std::atoi(tfLoader->readOption("message").c_str()))
 	{
 		char *buffer = new char[256];
 		memset(buffer, 0, 256);
@@ -96,7 +95,7 @@ REPEATE:
 		delete buffer;
 	}
 
-  if(std::atoi(rp->read("opencv")))
+  if(std::atoi(tfLoader->readOption("opencv").c_str()))
   {
     for(int i=0;i<tfPred.size();++i)
     {

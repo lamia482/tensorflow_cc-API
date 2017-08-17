@@ -2,6 +2,7 @@
 #define _TF_API_H_
 
 #include "tf_api_base.h"
+#include <glog/logging.h>
 
 class TensorflowApi: public TensorflowApiBase
 {
@@ -14,6 +15,9 @@ public:
 	bool feedRawData(const unsigned char *data);
 	bool readOperationName(const std::string &model_file);
 	std::vector<TensorflowApiPrediction> doPredict(void);
+  ReadOptions *getReadOption(void);
+  void setGlogLevel(const std::string &);
+  static std::map<std::string, google::LogSeverity> m_GlogLevelMap;
 };
 
 #endif

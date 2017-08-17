@@ -8,15 +8,42 @@ TensorflowApi::TensorflowApi()
 	m_OutputTensorClass = "detection_classes:0";
 	m_OutputTensorNum = "num_detections:0";
 
+  // m_GlogLevelMap["DEBUG"] = google::DEBUG;
+  m_GlogLevelMap["INFO"] = google::INFO;
+  m_GlogLevelMap["WARNING"] = google::WARNING;
+  m_GlogLevelMap["ERROR"] = google::ERROR;
+  m_GlogLevelMap["FATAL"] = google::FATAL;
+  
 	input_width = 640;
 	input_height = 424;
 	wanted_channels = 3;
 	m_ProbThresh = .6;
+  m_pReadOptions = new ReadOptions("resource/default.cfg");
+  m_pMarkt = new Markt(std::atol(m_pReadOptions->read("cpu_frequency")));
+  google::InitGoogleLogging(m_pReadOptions->read("exe_name"));
+  setGlogLevel((std::string)(m_pReadOptions->read("log_level")));  
 }
 
 TensorflowApi::~TensorflowApi()
 {
 	m_pSession->Close();
+  if(m_pMarkt)
+    delete m_pMarkt;
+  if(m_pReadOptions)
+    delete m_pReadOptions;
+  google::ShutdownGoogleLogging();
+}
+
+ReadOptions *TensorflowApi::getReadOption(void)
+{
+  return m_pReadOptions;
+}
+
+std::map<std::string, google::LogSeverity> TensorflowApi::m_GlogLevelMap;
+
+void TensorflowApi::setGlogLevel(const std::string &logLevel)
+{
+  google::SetStderrLogging(m_GlogLevelMap[logLevel]);
 }
 
 bool TensorflowApi::loadModel(const std::string &model_file)
@@ -81,6 +108,7 @@ bool TensorflowApi::loadLabel(const std::string &label_file)
 bool TensorflowApi::feedPath(const std::string &image_file)
 {
 	m_Clock = clock();
+  m_pMarkt->mark1();
 	// tensorflow::ops::DecodeRaw()
 	auto root = tensorflow::Scope::NewRootScope();
 	tensorflow::string input_name = "file_reader";
@@ -138,6 +166,7 @@ bool TensorflowApi::feedPath(const std::string &image_file)
 bool TensorflowApi::feedRawData(const unsigned char *data)
 {
 	m_Clock = clock();
+  m_pMarkt->mark1();
 	auto imageTensor = tensorflow::Tensor(tensorflow::DT_UINT8, {{1, input_height, input_width, wanted_channels}});
 	std::copy_n(data, input_height*input_width*wanted_channels, imageTensor.flat<unsigned char>().data());
 
@@ -161,13 +190,14 @@ bool TensorflowApi::readOperationName(const std::string &model_file)
 std::vector<TensorflowApiPrediction> TensorflowApi::doPredict(void)
 {
 	std::vector<TensorflowApiPrediction> res;
-
+  
 	tensorflow::Status status = m_pSession->Run({{m_InputTensorName, m_ImageTensor[0]}}, {m_OutputTensorBox, m_OutputTensorScore, m_OutputTensorClass, m_OutputTensorNum}, {}, &m_Outputs);
 	if(!status.ok())
 	{
 		LOG(ERROR) << "Error: Running session failed, reason: " << status.ToString() << "\n";
 		return res;
 	}
+  m_pMarkt->mark2();
 	auto boxTensor = m_Outputs[0].flat<float>();
 	auto scoreTensor = m_Outputs[1].flat<float>();
 	auto classTensor = m_Outputs[2].flat<float>();
@@ -184,8 +214,8 @@ std::vector<TensorflowApiPrediction> TensorflowApi::doPredict(void)
 		// [y1, x1, y2, x2];
 		LOG(INFO) << " Index: " << i << "\tclass ID: " << classTensor(i) \
 					<< "\tCategory: " << m_Label[classTensor(i)] \
-					<< "\tProb: " << scoreTensor(i) \
-					<< "\t[" << boxTensor(i*4+1)*input_width << ", " << boxTensor(i*4+0)*input_height \
+					<< " Prob: " << scoreTensor(i) \
+					<< " [" << boxTensor(i*4+1)*input_width << ", " << boxTensor(i*4+0)*input_height \
 					<< ", " << boxTensor(i*4+3)*input_width - boxTensor(i*4+1)*input_width \
 					<< ", " << boxTensor(i*4+2)*input_height - boxTensor(i*4+0)*input_height << "]";
 		if(resPredictionProb <= scoreTensor(i))
@@ -197,9 +227,10 @@ std::vector<TensorflowApiPrediction> TensorflowApi::doPredict(void)
 
 	LOG(INFO) << " result   -->  class ID: " << resPrediction \
 				<< "\tcategory: " << m_Label[resPrediction] \
-				<< "\tprob: " << resPredictionProb \
-				<< "\ttime: " << 1.f*(clock() - m_Clock)/1000000.f << "seconds" \
-				<< "\n";
+				<< " prob: " << resPredictionProb \
+				// << " time: " << 1.f*(clock() - m_Clock)/1000000.f << " seconds" 
+        << " time: " << m_pMarkt->sectime() << " seconds" \
+				<< "\n"; 
 
 	if(numPrediction > 0)
 	{
