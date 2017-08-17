@@ -6,15 +6,15 @@
 #include <opencv2/opencv.hpp>
 #include "tensorflow_loader.h"
 #include "laMiaSocket.h"
-
-const bool B_SEND_MESSAGE = false;
+#include "read_options.h"
 
 int main(int argc, char **argv)
 {
 START:
 	TensorflowLoader *tfLoader = new TensorflowLoader();
+  ReadOptions *rp = new ReadOptions("resource/default.cfg");
 	laMiaSocket *ls = NULL;
-	if(B_SEND_MESSAGE)
+	if(std::atoi(rp->read("message")))
 	{
 		ls = new laMiaSocket();
 		ls->setPort(4999);
@@ -27,44 +27,48 @@ START:
 		}
 	}
 
-	std::string image_file = "images/image3.jpg";
+	std::string image_file = (std::string)(rp->read("image_file"));
 
-	if(!tfLoader->loadModel("resource/target_rcnn.pb"))
+	if(!tfLoader->loadModel((std::string)(rp->read("model_file"))))
 	{
 		LOG(ERROR) << "Error: Fatal errors in loading model\n";
 		return -1;
 	}
 
-	/*
-	if(!tfLoader->readOperationName(""))
-	{
-		LOG(ERROR) << "Error: Fatal errors in reading operationsl\n";
-		return -1;
+  if(std::atoi((rp->read("readoperations"))))
+  {
+    if(!tfLoader->readOperationName(""))
+    {
+      LOG(ERROR) << "Error: Fatal errors in reading operationsl\n";
+      return -1;
+    }
 	}
-	*/
 
-	if(!tfLoader->loadLabel("resource/category.txt"))
+	if(!tfLoader->loadLabel((std::string)(rp->read("label_file"))))
 	{
 		LOG(ERROR) << "Error: Fatal errors in loading category\n";
 		return -2;
 	}
 
   std::vector<TensorflowLoaderPrediction> tfPred;
-
-	// cv::Mat image = cv::imread(image_file);
-	// if(image.empty())
-	// {
-	// 	LOG(ERROR) << "Error: Imread image failed\n";
-	// 	return -5;
-	// }
-
+  cv::Mat image;
+	if(std::atoi(rp->read("opencv")))
+  {
+     image = cv::imread(image_file);
+    if(image.empty())
+    {
+      LOG(ERROR) << "Error: Imread image failed\n";
+      return -5;
+    }
+  }
+    
 	unsigned char *data = new unsigned char[640*424*3];
 	memset(data, 0, 640*424*3*sizeof(unsigned char));
 	FILE *fp = NULL;
-	fp = fopen("images/image3.data", "rb");
+	fp = fopen(rp->read("image_data"), "rb");
 	if(fp == NULL)
 	{
-		LOG(ERROR) << "File: images/image3.data open failed\n";
+		LOG(ERROR) << "File: " << rp->read("image_data") << " open failed\n";
 		return -6;
 	}
 	fread(data, 1, 640*424*3*sizeof(unsigned char), fp);
@@ -82,7 +86,7 @@ REPEATE:
 		LOG(ERROR) << "Error: Fatal error in predicting\n";
 		return -8;
 	}
-	if(B_SEND_MESSAGE)
+	if(std::stoi(rp->read("message")))
 	{
 		char *buffer = new char[256];
 		memset(buffer, 0, 256);
@@ -92,19 +96,26 @@ REPEATE:
 		delete buffer;
 	}
 
+  if(std::atoi(rp->read("opencv")))
+  {
+    for(int i=0;i<tfPred.size();++i)
+    {
+      cv::rectangle(image, cv::Rect(tfPred[i].lefttopx, tfPred[i].lefttopy, tfPred[i].width, tfPred[i].height),
+      cv::Scalar(0, 0, 255), 3);
+    }
+    cv::imwrite("save.jpg", image);
+  }
+  
+  goto REPEATE;
+  
+  if(data)
+    delete data;
+  if(tfLoader)
+    delete tfLoader;
+  if(ls)
+    delete ls;
 
-	// goto REPEATE;
-
-	// for(int i=0;i<tfPred.size();++i)
-	// {
-	// 	cv::rectangle(image, cv::Rect(tfPred[i].lefttopx, tfPred[i].lefttopy, tfPred[i].width, tfPred[i].height),
-	// 	cv::Scalar(0, 0, 255), 3);
-	// }
-	// cv::imwrite("save.jpg", image);
-
-
-	delete data;
-	delete tfLoader;
-
+  // goto START;
+  
 	return 0;
 }
