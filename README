@@ -24,14 +24,19 @@ Step 3:
 Errors may occur, mainly because of the -I or -L and -l not included...
 
 
-------------------------------  Intro
+------------------------------- Intro
 TensorflowLoader is such a class that does:
 1. loadModel() and loadLabel() allow to load model via each file name.
 2. feedPath() allow to obtain image from a file path.
 3. feedRawData() allow to get data from a camera RGB data.
 4. readOperationName() to get operations in defined in pb file, so that we can execute other words, sess->Run() for this operation.
 5. doPredict() returns the prediction containing the info of coordinate and confidence and its category.
+......
 
 laMiaSocket is such a class that does:
 1. select whether client or server
 2. send message between client and server
+......
+
+-------------------------------- 
+updating README is so easy to forget....
