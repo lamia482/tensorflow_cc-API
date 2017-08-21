@@ -1,1 +1,90 @@
-/home/e0024/workspace/repository/tensorflow/models/object_detection/data/mscoco_label_map.txt
+person        
+bicycle       
+car           
+motorcycle    
+airplane      
+bus           
+train         
+truck         
+boat          
+traffic light 
+fire hydrant  
+unknown object
+stop sign     
+parking meter 
+bench         
+bird          
+cat           
+dog           
+horse         
+sheep         
+cow           
+elephant      
+bear          
+zebra         
+giraffe       
+unknown object
+backpack      
+umbrella      
+unknown object
+unknown object
+handbag       
+tie           
+suitcase      
+frisbee       
+skis          
+snowboard     
+sports ball   
+kite          
+baseball bat  
+baseball glove
+skateboard    
+surfboard     
+tennis racket 
+bottle        
+unknown object
+wine glass    
+cup           
+fork          
+knife         
+spoon         
+bowl          
+banana        
+apple         
+sandwich      
+orange        
+broccoli      
+carrot        
+hot dog       
+pizza         
+donut         
+cake          
+chair         
+couch         
+potted plant  
+bed           
+unknown object
+dining table  
+unknown object
+unknown object
+toilet        
+unknown object
+tv            
+laptop        
+mouse         
+remote        
+keyboard      
+cell phone    
+microwave     
+oven          
+toaster       
+sink          
+refrigerator  
+unknown object
+book          
+clock         
+vase          
+scissors      
+teddy bear    
+hair drier    
+toothbrush    

@@ -1,21 +1,25 @@
 A class to load tf models and do predict by Makefile
 
 Step 1:
-  put tensorflow head files into as include < you may need do '  ln -s /absolute/path/to/your/tensorflow/header/folder /absolute/dst/path  '  or just copy that folder here >
-  (in this repo, include is a softlink to my local machine's folder)
-  put libtensorflow_cc.so and libcudnn.so into ./lib (the same as include)
-  # if do not have, uhm...
-  # follow tensorflow home page or find other ways...
-  # my includes and lib(tf api r1.2) now uploaded at ' https://drive.google.com/open?id=0B9BHx-TgQtxjcXhEQU5YazVnbWM ' also can download and tar it
+  put tensorflow head files into as include;
+  (in this repo, include is a softlink to my local machine's folder);
+  < you may need download what I've uploaded and copy that folder here, link see below >;
+  put libtensorflow_cc.so and libcudnn.so into ./lib (the same as include);
+  if you prefer to use your own, follow tensorflow home page or find other ways...
+  my includes and lib(tf api r1.2, built with bazel) now uploaded at 
+  ' https://drive.google.com/open?id=0B9BHx-TgQtxjcXhEQU5YazVnbWM ' 
+  also can download and tar it
 
 Step 2:
-  put category.txt and model.pb in ./resource
-  modify the operation name in TensorflowLoader::doPredict()
+  put category.txt and model.pb in ./resource;
+  < my category is in this repo, while the pb file is 
+  tensorflow/models/object_detection/ssd_inception_v2_coco_11_06_2017/frozen_inference_graph.pb >
+  modify the operation name in TensorflowLoader::doPredict() to sess->Run(op);
   ./build.sh
   # This may clean up and build:
-    tf_api.o in ./obj
+    *.o in ./obj
     gen in ./bin
-    libtfloader.so and libtfloader.a in ./lib
+    head file and library in ./submit
 
 Step 3:
   ./run.sh
@@ -40,3 +44,6 @@ laMiaSocket is such a class that does:
 
 -------------------------------- 
 updating README is so easy to forget....
+
+--------------------------------
+tensorflow_yolo is on the way...
