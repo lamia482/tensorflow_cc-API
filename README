@@ -13,7 +13,8 @@ Step 1:
 Step 2:
   put category.txt and model.pb in ./resource;
   < my category is in this repo, while the pb file is 
-  tensorflow/models/object_detection/ssd_inception_v2_coco_11_06_2017/frozen_inference_graph.pb >
+  /home/e0024/workspace/repository/tensorflow/models/object_detection/ \
+  faster_rcnn_resnet101_coco_11_06_2017/frozen_inference_graph.pb >
   modify the operation name in TensorflowLoader::doPredict() to sess->Run(op);
   ./build.sh
   # This may clean up and build:
