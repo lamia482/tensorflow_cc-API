@@ -241,7 +241,7 @@ std::vector<TensorflowApiPrediction> TensorflowApi::doPredict(void)
 		}
 	}
 
-	LOG(INFO) << " result   -->  class ID: " << resPrediction \
+	LOG(INFO) << " result -->  class ID: " << resPrediction \
 				<< "\tcategory: " << m_Label[resPrediction] \
 				<< " prob: " << resPredictionProb \
 				// << " time: " << 1.f*(clock() - m_Clock)/1000000.f << " seconds" 
