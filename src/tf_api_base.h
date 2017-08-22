@@ -1,5 +1,5 @@
-#ifndef _TF_API_BASE_H_
-#define _TF_API_BASE_H_
+#ifndef TF_API_BASE_H_
+#define TF_API_BASE_H_
 
 #include <iostream>
 #include <fstream>
@@ -60,4 +60,4 @@ protected:
 };
 
 
-#endif
+#endif // ! TF_API_BASE_H_

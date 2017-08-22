@@ -1,5 +1,5 @@
-#ifndef _TF_API_H_
-#define _TF_API_H_
+#ifndef TF_API_H_
+#define TF_API_H_
 
 #include "tf_api_base.h"
 #include <glog/logging.h>
@@ -20,4 +20,4 @@ public:
   static std::map<std::string, google::LogSeverity> m_GlogLevelMap;
 };
 
-#endif
+#endif // ! TF_API_H_

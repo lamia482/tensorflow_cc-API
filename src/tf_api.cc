@@ -1,5 +1,7 @@
 #include "tf_api.h"
 
+#ifdef TF_API_H_
+
 TensorflowApi::TensorflowApi()
 {
 	m_InputTensorName = "image_tensor:0";
@@ -7,7 +9,7 @@ TensorflowApi::TensorflowApi()
 	m_OutputTensorScore = "detection_scores:0";
 	m_OutputTensorClass = "detection_classes:0";
 	m_OutputTensorNum = "num_detections:0";
-
+  
   // m_GlogLevelMap["DEBUG"] = google::DEBUG;
   m_GlogLevelMap["INFO"] = google::INFO;
   m_GlogLevelMap["WARNING"] = google::WARNING;
@@ -22,6 +24,7 @@ TensorflowApi::TensorflowApi()
   m_pMarkt = new Markt(std::atol(m_pReadOptions->read("cpu_frequency")));
   google::InitGoogleLogging(m_pReadOptions->read("exe_name"));
   setGlogLevel((std::string)(m_pReadOptions->read("log_level")));  
+  LOG(INFO) << "Info: initial done...";
 }
 
 TensorflowApi::~TensorflowApi()
@@ -65,20 +68,33 @@ bool TensorflowApi::loadModel(const std::string &model_file)
 		LOG(ERROR) << "Error: Loading model file<" << model_file << "> failed, reason: model_file is empty\n";
 		return false;
 	}
-	status = tensorflow::ReadBinaryProto(tensorflow::Env::Default(), model_file, &m_GraphDef);
-	if(!status.ok())
-	{
-		LOG(ERROR) << "Error: Loading model file<" << model_file << "> failed, reason: " << status.ToString() << "\n";
-		return false;
-	}
-	m_ModelFile = model_file;
-	status = m_pSession->Create(m_GraphDef);
-	if(!status.ok())
-	{
-		LOG(ERROR) << "Error: Create model grash failed, reason: " << status.ToString() << "\n";
-		return false;
-	}
-
+  if(m_pReadOptions->matchSuffix(model_file.c_str(), "pb"))
+  {
+    status = tensorflow::ReadBinaryProto(tensorflow::Env::Default(), model_file, &m_GraphDef);
+    if(!status.ok())
+    {
+      LOG(ERROR) << "Error: Loading model file<" << model_file << "> failed, reason: " << status.ToString() << "\n";
+      return false;
+    }
+    m_ModelFile = model_file;
+    status = m_pSession->Create(m_GraphDef);
+    if(!status.ok())
+    {
+      LOG(ERROR) << "Error: Create model grash failed, reason: " << status.ToString() << "\n";
+      return false;
+    }
+  }
+  else if(m_pReadOptions->matchSuffix(model_file.c_str(), "ckpt"))
+  {
+    LOG(WARNING) << "Warning: not support file with suffix of ckpt for now <" << model_file << ">";
+    return false;
+  }
+  else
+  {
+    LOG(ERROR) << "Error: file with unrecognized suffix <" << model_file << ">";
+    return false;
+  }
+  LOG(INFO) << "Info: load model from <" << model_file << ">";
 	return true;
 }
 
@@ -248,3 +264,5 @@ std::vector<TensorflowApiPrediction> TensorflowApi::doPredict(void)
 
 	return res;
 }
+
+#endif // ! TF_API_H_

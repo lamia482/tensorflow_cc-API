@@ -142,4 +142,29 @@ void ReadOptions::readVal(void)
 	}
 }
 
+bool ReadOptions::matchSuffix(const char *fileName, const char *suffix)
+{
+  if(std::string(suffixOf(fileName)) == (std::string)(suffix))
+    return true;
+  return false;
+}
+
+char *ReadOptions::suffixOf(const char *val)
+{
+  int len = strlen(val);
+  char *cast_val = const_cast<char*>(val);
+  char *p = strchr(cast_val, '\n');
+    if(p != NULL)
+      *p = '\0';
+  for(int i=len-1;i>=0;--i)
+  {
+    if(val[i] == '.')
+    {
+      p = &cast_val[i+1];
+      break;
+    }
+  }
+  return p;
+}
+
 #endif // READ_OPTIONS_H_

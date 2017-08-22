@@ -8,10 +8,12 @@ public:
 	~ReadOptions(void);
 	bool readPermitted(void);
 	char *read(const char *);
+  bool matchSuffix(const char *, const char *);
 private:
 	void getNext(void);
 	bool readOption(const char *);
 	void readVal(void);
+  char *suffixOf(const char *);
 	
 	void *m_pFile;
 	char *m_pFileName;

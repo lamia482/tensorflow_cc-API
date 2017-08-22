@@ -1,5 +1,5 @@
-#ifndef _TENSORFLOW_LOADER_H
-#define _TENSORFLOW_LOADER_H
+#ifndef TENSORFLOW_LOADER_H_
+#define TENSORFLOW_LOADER_H_
 
 #include <string>
 #include <vector>
@@ -33,4 +33,4 @@ private:
 };
 
 
-#endif
+#endif // ! TENSORFLOW_LOADER_H_

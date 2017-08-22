@@ -1,6 +1,8 @@
 #include "tensorflow_loader.h"
 #include "tf_api.h"
 
+#ifdef TENSORFLOW_LOADER_H_
+
 TensorflowLoader::TensorflowLoader(void)
 {
   m_pTensorflowApi = new TensorflowApi();
@@ -51,3 +53,5 @@ std::string TensorflowLoader::readOption(const char *option)
 {
   return (std::string)(m_pTensorflowApi->getReadOption()->read(option));
 }
+
+#endif // ! TENSORFLOW_LOADER_H_
