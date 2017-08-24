@@ -28,6 +28,7 @@ class TensorflowApiBase
 public:
 	TensorflowApiBase(void){}
 	virtual ~TensorflowApiBase(void){}
+  virtual bool createStatus(void) = 0;
 	virtual bool loadModel(const std::string &) = 0;
 	virtual bool loadLabel(const std::string &) = 0;
 	virtual bool feedPath(const std::string &i) = 0;
@@ -44,8 +45,7 @@ protected:
 	tensorflow::Tensor m_Sample;
 	std::vector<std::pair<std::string, tensorflow::Tensor> > m_Samples;
 	std::string m_LabelFile;
-	std::vector<std::string> m_Category;
-	std::map<int, std::string> m_Label;
+	std::map<int, std::string> m_Category;
 	std::string m_ModelFile;
 	tensorflow::Session *m_pSession;
 	tensorflow::GraphDef m_GraphDef;
@@ -57,6 +57,7 @@ protected:
 	clock_t m_Clock;
   Markt *m_pMarkt;
   ReadOptions *m_pReadOptions;
+  bool m_bCreateStatus;
 };
 
 

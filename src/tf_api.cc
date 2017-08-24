@@ -4,6 +4,7 @@
 
 TensorflowApi::TensorflowApi()
 {
+  m_bCreateStatus = true;
 	m_InputTensorName = "image_tensor:0";
 	m_OutputTensorBox = "detection_boxes:0";
 	m_OutputTensorScore = "detection_scores:0";
@@ -16,14 +17,26 @@ TensorflowApi::TensorflowApi()
   m_GlogLevelMap["ERROR"] = google::ERROR;
   m_GlogLevelMap["FATAL"] = google::FATAL;
   
-	input_width = 640;
-	input_height = 424;
-	wanted_channels = 3;
-	m_ProbThresh = .6;
   m_pReadOptions = new ReadOptions("resource/default.cfg");
+  if(!m_pReadOptions->readPermitted())
+  {
+    m_bCreateStatus = false;
+    return;
+  }
   m_pMarkt = new Markt(std::atol(m_pReadOptions->read("cpu_frequency")));
   google::InitGoogleLogging(m_pReadOptions->read("exe_name"));
   setGlogLevel((std::string)(m_pReadOptions->read("log_level")));  
+  
+  input_width = std::atoi(m_pReadOptions->read("raw_data_width"));
+	input_height = std::atoi(m_pReadOptions->read("raw_data_height"));
+	wanted_channels = std::atoi(m_pReadOptions->read("raw_data_channels"));
+	m_ProbThresh = std::atof(m_pReadOptions->read("thresh")); 
+  if(wanted_channels != 3)
+  {
+    m_bCreateStatus = false;
+    return;
+  }
+  
   LOG(INFO) << "Info: initial done...";
 }
 
@@ -49,6 +62,11 @@ void TensorflowApi::setGlogLevel(const std::string &logLevel)
   google::SetStderrLogging(m_GlogLevelMap[logLevel]);
 }
 
+bool TensorflowApi::createStatus(void)
+{
+  return m_bCreateStatus;
+}
+
 bool TensorflowApi::loadModel(const std::string &model_file)
 {
 	// tensorflow::GPUOptions gpuConfig;
@@ -68,7 +86,7 @@ bool TensorflowApi::loadModel(const std::string &model_file)
 		LOG(ERROR) << "Error: Loading model file<" << model_file << "> failed, reason: model_file is empty\n";
 		return false;
 	}
-  if(m_pReadOptions->matchSuffix(model_file.c_str(), "pb"))
+  if(tensorflow::StringPiece(model_file).ends_with(".pb"))
   {
     status = tensorflow::ReadBinaryProto(tensorflow::Env::Default(), model_file, &m_GraphDef);
     if(!status.ok())
@@ -84,7 +102,7 @@ bool TensorflowApi::loadModel(const std::string &model_file)
       return false;
     }
   }
-  else if(m_pReadOptions->matchSuffix(model_file.c_str(), "ckpt"))
+  else if(tensorflow::StringPiece(model_file).ends_with(".ckpt"))
   {
     LOG(WARNING) << "Warning: not support file with suffix of ckpt for now <" << model_file << ">";
     return false;
@@ -112,11 +130,15 @@ bool TensorflowApi::loadLabel(const std::string &label_file)
 		int idx = 1;
 		while(std::getline(labels, line))
 		{
-			m_Category.push_back(line);
-			m_Label[idx++] = line;
+			m_Category[idx++] = line;
 		}
 		labels.close();
 	}
+  else if(tensorflow::StringPiece(label_file).ends_with(".pbtxt"))
+  {
+    LOG(WARNING) << "Warning: not support label.pbtxt for now";
+    return true;
+  }
 
 	return true;
 }
@@ -229,7 +251,7 @@ std::vector<TensorflowApiPrediction> TensorflowApi::doPredict(void)
 		numPrediction = i+1;
 		// [y1, x1, y2, x2];
 		LOG(INFO) << " Index: " << i << "\tclass ID: " << classTensor(i) \
-					<< "\tCategory: " << m_Label[classTensor(i)] \
+					<< "\tCategory: " << m_Category[classTensor(i)] \
 					<< " Prob: " << scoreTensor(i) \
 					<< " [" << boxTensor(i*4+1)*input_width << ", " << boxTensor(i*4+0)*input_height \
 					<< ", " << boxTensor(i*4+3)*input_width - boxTensor(i*4+1)*input_width \
@@ -242,7 +264,7 @@ std::vector<TensorflowApiPrediction> TensorflowApi::doPredict(void)
 	}
 
 	LOG(INFO) << " result -->  class ID: " << resPrediction \
-				<< "\tcategory: " << m_Label[resPrediction] \
+				<< "\tcategory: " << m_Category[resPrediction] \
 				<< " prob: " << resPredictionProb \
 				// << " time: " << 1.f*(clock() - m_Clock)/1000000.f << " seconds" 
         << " time: " << m_pMarkt->sectime() << " seconds" \

@@ -21,6 +21,7 @@ class TensorflowLoader
 public:
   TensorflowLoader(void);
   ~TensorflowLoader(void);
+  bool createStatus(void);
   bool loadModel(const std::string &);
   bool loadLabel(const std::string &);
   bool feedPath(const std::string &);

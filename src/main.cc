@@ -11,6 +11,13 @@ int main(int argc, char **argv)
 {
 START:
 	TensorflowLoader *tfLoader = new TensorflowLoader();
+  if(!tfLoader->createStatus())
+  {
+    LOG(ERROR) << "Fatal: failed to create TensorflowLoader object";
+               // << "since error code: " << tfLoader->errorCode()
+               // << "error message: " << tfLoader->errorMsg();
+    return 999;
+  }
   
 	laMiaSocket *ls = NULL;
 	if(std::atoi(tfLoader->readOption("message").c_str()))

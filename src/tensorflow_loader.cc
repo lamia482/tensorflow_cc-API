@@ -13,6 +13,11 @@ TensorflowLoader::~TensorflowLoader(void)
   delete m_pTensorflowApi;
 }
 
+bool TensorflowLoader::createStatus(void)
+{
+  return m_pTensorflowApi->createStatus();
+}
+
 bool TensorflowLoader::loadModel(const std::string &model_file)
 {
   return m_pTensorflowApi->loadModel(model_file);
