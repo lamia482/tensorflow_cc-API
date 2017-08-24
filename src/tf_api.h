@@ -7,15 +7,15 @@
 class TensorflowApi: public TensorflowApiBase
 {
 public:
-	TensorflowApi(void);
-	~TensorflowApi(void);
+  TensorflowApi(void);
+  ~TensorflowApi(void);
   bool createStatus(void);
-	bool loadModel(const std::string &model_file);
-	bool loadLabel(const std::string &label_file);
-	bool feedPath(const std::string &image_file);
-	bool feedRawData(const unsigned char *data);
-	bool readOperationName(const std::string &model_file);
-	std::vector<TensorflowApiPrediction> doPredict(void);
+  bool loadModel(const std::string &model_file);
+  bool loadLabel(const std::string &label_file);
+  bool feedPath(const std::string &image_file);
+  bool feedRawData(const unsigned char *data);
+  bool readOperationName(const std::string &model_file);
+  std::vector<TensorflowApiPrediction> doPredict(void);
   ReadOptions *getReadOption(void);
   void setGlogLevel(const std::string &);
   static std::map<std::string, google::LogSeverity> m_GlogLevelMap;

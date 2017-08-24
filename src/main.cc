@@ -10,7 +10,7 @@
 int main(int argc, char **argv)
 {
 START:
-	TensorflowLoader *tfLoader = new TensorflowLoader();
+  TensorflowLoader *tfLoader = new TensorflowLoader();
   if(!tfLoader->createStatus())
   {
     LOG(ERROR) << "Fatal: failed to create TensorflowLoader object";
@@ -19,27 +19,27 @@ START:
     return 999;
   }
   
-	laMiaSocket *ls = NULL;
-	if(std::atoi(tfLoader->readOption("message").c_str()))
-	{
-		ls = new laMiaSocket();
-		ls->setPort(4999);
-		{
-			ls->setRole(laMiaSocketTypeClient);
-			std::string ip_addr;
-			std::cerr << "Client selected, choose server ip: ";
-			std::cin >> ip_addr;
-			ls->connectServer(ip_addr.c_str());
-		}
-	}
+  laMiaSocket *ls = NULL;
+  if(std::atoi(tfLoader->readOption("message").c_str()))
+  {
+    ls = new laMiaSocket();
+    ls->setPort(4999);
+    {
+      ls->setRole(laMiaSocketTypeClient);
+      std::string ip_addr;
+      std::cerr << "Client selected, choose server ip: ";
+      std::cin >> ip_addr;
+      ls->connectServer(ip_addr.c_str());
+    }
+  }
 
-	std::string image_file = tfLoader->readOption("image_file");
+  std::string image_file = tfLoader->readOption("image_file");
 
-	if(!tfLoader->loadModel(tfLoader->readOption("model_file")))
-	{
-		LOG(ERROR) << "Error: Fatal errors in loading model\n";
-		return -1;
-	}
+  if(!tfLoader->loadModel(tfLoader->readOption("model_file")))
+  {
+    LOG(ERROR) << "Error: Fatal errors in loading model\n";
+    return -1;
+  }
 
   if(std::atoi(tfLoader->readOption("readoperations").c_str()))
   {
@@ -48,17 +48,17 @@ START:
       LOG(ERROR) << "Error: Fatal errors in reading operationsl\n";
       return -1;
     }
-	}
+  }
 
-	if(!tfLoader->loadLabel(tfLoader->readOption("label_file")))
-	{
-		LOG(ERROR) << "Error: Fatal errors in loading category\n";
-		return -2;
-	}
+  if(!tfLoader->loadLabel(tfLoader->readOption("label_file")))
+  {
+    LOG(ERROR) << "Error: Fatal errors in loading category\n";
+    return -2;
+  }
 
   std::vector<TensorflowLoaderPrediction> tfPred;
   cv::Mat image;
-	if(std::atoi(tfLoader->readOption("opencv").c_str()))
+  if(std::atoi(tfLoader->readOption("opencv").c_str()))
   {
      image = cv::imread(image_file);
     if(image.empty())
@@ -68,39 +68,39 @@ START:
     }
   }
     
-	unsigned char *data = new unsigned char[640*424*3];
-	memset(data, 0, 640*424*3*sizeof(unsigned char));
-	FILE *fp = NULL;
-	fp = fopen(tfLoader->readOption("image_data").c_str(), "rb");
-	if(fp == NULL)
-	{
-		LOG(ERROR) << "File: " << tfLoader->readOption("image_data") << " open failed\n";
-		return -6;
-	}
-	fread(data, 1, 640*424*3*sizeof(unsigned char), fp);
-	fclose(fp);
+  unsigned char *data = new unsigned char[640*424*3];
+  memset(data, 0, 640*424*3*sizeof(unsigned char));
+  FILE *fp = NULL;
+  fp = fopen(tfLoader->readOption("image_data").c_str(), "rb");
+  if(fp == NULL)
+  {
+    LOG(ERROR) << "File: " << tfLoader->readOption("image_data") << " open failed\n";
+    return -6;
+  }
+  fread(data, 1, 640*424*3*sizeof(unsigned char), fp);
+  fclose(fp);
 REPEATE:
-	if(!tfLoader->feedRawData(data))
-	{
-		LOG(ERROR) << "Error: Fatal errors in fetching data\n";
-		return -7;
-	}
+  if(!tfLoader->feedRawData(data))
+  {
+    LOG(ERROR) << "Error: Fatal errors in fetching data\n";
+    return -7;
+  }
 
-	tfPred = tfLoader->doPredict();
-	if(!tfPred.size())
-	{
-		LOG(ERROR) << "Error: Fatal error in predicting\n";
-		return -8;
-	}
-	if(std::atoi(tfLoader->readOption("message").c_str()))
-	{
-		char *buffer = new char[256];
-		memset(buffer, 0, 256);
-		buffer[0] = tfPred.size();
-		memcpy((void*)&buffer[1], (void*)&tfPred[0], tfPred.size()*sizeof(TensorflowLoaderPrediction));
-		ls->sendMessage(buffer);
-		delete buffer;
-	}
+  tfPred = tfLoader->doPredict();
+  if(!tfPred.size())
+  {
+    LOG(ERROR) << "Error: Fatal error in predicting\n";
+    return -8;
+  }
+  if(std::atoi(tfLoader->readOption("message").c_str()))
+  {
+    char *buffer = new char[256];
+    memset(buffer, 0, 256);
+    buffer[0] = tfPred.size();
+    memcpy((void*)&buffer[1], (void*)&tfPred[0], tfPred.size()*sizeof(TensorflowLoaderPrediction));
+    ls->sendMessage(buffer);
+    delete buffer;
+  }
 
   if(std::atoi(tfLoader->readOption("opencv").c_str()))
   {
@@ -123,5 +123,5 @@ REPEATE:
 
   // goto START;
   
-	return 0;
+  return 0;
 }

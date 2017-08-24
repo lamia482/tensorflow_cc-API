@@ -34,8 +34,8 @@ void logStr(const char *str);
 
 typedef enum
 {
-	laMiaSocketTypeServer,
-	laMiaSocketTypeClient
+  laMiaSocketTypeServer,
+  laMiaSocketTypeClient
 }laMiaSocketType, laMiaSocketType_t;
 
 typedef size_t laMiaSocketSize;
@@ -43,40 +43,40 @@ typedef size_t laMiaSocketSize;
 class laMiaSocket
 {
 public:
-	laMiaSocket(void);
-	laMiaSocket(const laMiaSocketType &type, const int &port);
-	virtual ~laMiaSocket(void);
-	void setRole(const laMiaSocketType &type);
-	void setPort(const int &port);
-	void setBufSize(const laMiaSocketSize &size);
-	int bindClient(const char *client_ip = NULL);
-	void listenClient(void);
-	void connectServer(const char *server_ip = NULL);
-	void sendMessage(const char *buf = NULL);
-	void recvMessage(char *buf = NULL);
+  laMiaSocket(void);
+  laMiaSocket(const laMiaSocketType &type, const int &port);
+  virtual ~laMiaSocket(void);
+  void setRole(const laMiaSocketType &type);
+  void setPort(const int &port);
+  void setBufSize(const laMiaSocketSize &size);
+  int bindClient(const char *client_ip = NULL);
+  void listenClient(void);
+  void connectServer(const char *server_ip = NULL);
+  void sendMessage(const char *buf = NULL);
+  void recvMessage(char *buf = NULL);
 
 // private:
 #ifdef Linux
-	void closesocket(SOCKET skt)
-	{
-		close(skt);
-	}
-	void WSACleanup(void)
-	{
-		logStr("WSACleanup!~");
-	}
+  void closesocket(SOCKET skt)
+  {
+    close(skt);
+  }
+  void WSACleanup(void)
+  {
+    logStr("WSACleanup!~");
+  }
 #else
-	WSADATA m_WSD;
+  WSADATA m_WSD;
 #endif // Linux
 
-	int m_BufSize;
-	SOCKET m_Server;
-	SOCKET m_Client;
-	char *m_pRecvMessage;
-	char *m_pSendMessage;
-	sockaddr_in m_AddrServ;
-	int m_Port;
-	laMiaSocketType m_laMiaSocketType;
+  int m_BufSize;
+  SOCKET m_Server;
+  SOCKET m_Client;
+  char *m_pRecvMessage;
+  char *m_pSendMessage;
+  sockaddr_in m_AddrServ;
+  int m_Port;
+  laMiaSocketType m_laMiaSocketType;
 };
 
 #endif
