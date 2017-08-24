@@ -19,20 +19,20 @@ STATIC = make_a
 STATIC_LIB = $(GEN_LIB)libtfloader.a
 
 INCLUDE_PATH = -I./include \
-							 -I$(SRC_DIR) \
-							 `pkg-config --cflags opencv`
+               -I$(SRC_DIR) \
+               `pkg-config --cflags opencv`
 
 LD_LIBRARY_PATH = -L$(LIB_DIR) 
 
 LD_FLAGS = -ltensorflow_cc -lcudnn \
-					 `pkg-config --libs opencv` \
-						-lglog -lm -lpthread
+           `pkg-config --libs opencv` \
+           -lglog -lm -lpthread
 
 OBJ = tensorflow_loader.o tf_api.o read_options.o
 OBJS_DIR = ./obj/
 OBJS = $(addprefix $(OBJS_DIR), $(OBJ))
 
-default: make_dir $(EXE)
+default: all
 
 all: make_dir $(DYNAMIC) $(STATIC) $(EXE)
 	@echo '---------------- DONE FOR ALL ---------------'
