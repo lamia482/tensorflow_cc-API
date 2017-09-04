@@ -32,13 +32,17 @@ OBJ = tensorflow_loader.o tf_api.o read_options.o
 OBJS_DIR = ./obj/
 OBJS = $(addprefix $(OBJS_DIR), $(OBJ))
 
-default: all
+default: $(EXE)
+	@echo '---------------- DONE FOR DEFAULT ---------------'
 
-all: make_dir $(DYNAMIC) $(STATIC) $(EXE)
+all: $(EXE) copy_deps
 	@echo '---------------- DONE FOR ALL ---------------'
 
-$(EXE): $(OBJS) copy_deps
-	$(CC_COMPILER) $(EXE_SRC) -o $(EXE) -I$(GEN_INC) $(CFLAGS) -L$(GEN_LIB) -ltfloader $(LD_FLAGS)
+$(EXE): make_dir $(OBJS) 
+	$(CC_COMPILER) $(EXE_SRC) -o $(EXE) -I$(INCLUDE_PATH) $(CFLAGS) -L$(LIB_DIR) $(OBJS) $(LD_FLAGS)
+
+install: copy_deps
+	@echo '---------------- DONE FOR INSTALL ----------------'
 
 $(OBJS_DIR)%.o: $(SRC_DIR)%.cc
 	$(CC_COMPILER) $(INCLUDE_PATH) $(LD_LIBRARY_PATH) $(CFLAGS) $(OPTS) -c $< -o $@
@@ -49,7 +53,7 @@ $(DYNAMIC): $(OBJS)
 $(STATIC): $(OBJS)
 	$(AR) rsv $(STATIC_LIB) $(OBJS)
 	
-copy_deps:
+copy_deps: $(DYNAMIC) $(STATIC)
 	cp $(SRC_DIR)tensorflow_loader.h $(GEN_INC)
 	cp $(LIB_DIR)libtensorflow_cc.so $(GEN_LIB)
 	cp $(LIB_DIR)libcudnn.so $(GEN_LIB)
