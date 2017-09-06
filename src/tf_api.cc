@@ -268,7 +268,7 @@ std::vector<TensorflowApiPrediction> TensorflowApi::doPredict(void)
         << " prob: " << resPredictionProb \
         // << " time: " << 1.f*(clock() - m_Clock)/1000000.f << " seconds" 
         << " time: " << m_pMarkt->sectime() << " seconds" \
-        << "\n"; 
+        << "\n\n"; 
 
   if(numPrediction > 0)
   {

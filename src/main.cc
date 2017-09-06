@@ -67,7 +67,22 @@ START:
       return -5;
     }
   }
-    
+  /*
+  FEED_PATH:
+  if(!tfLoader->feedPath(image_file))
+  {
+    LOG(ERROR) << "Error: Fatal errors in fetching image\n";
+    return -7;
+  }
+  
+  tfPred = tfLoader->doPredict();
+  if(!tfPred.size())
+  {
+    LOG(ERROR) << "Error: Fatal error in predicting\n";
+    return -8;
+  }
+  goto FEED_PATH;
+  */
   unsigned char *data = new unsigned char[640*424*3];
   memset(data, 0, 640*424*3*sizeof(unsigned char));
   FILE *fp = NULL;
