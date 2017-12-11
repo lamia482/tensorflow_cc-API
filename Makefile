@@ -10,7 +10,7 @@ LIB_DIR = ./lib/
 C_COMPILER = gcc
 CC_COMPILER = g++
 
-CFLAGS = -g -std=c++11 -DLinux
+CFLAGS = -g -std=c++11 -DLinux -fpermissive
 OPTS = -fPIC -shared
 
 DYNAMIC = make_so
